@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div>
+        <div class="form-container login">
+          <h2 class="form-title">Login</h2>
+          <form action="/log-in" method="post">
+            <label>
+              Email
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              Password
+              <input type="password" name="password" required />
+            </label>
+            <button class="form-btn login-btn">Log in</button>
+          </form>
+          <div class="form-redirect">
+            Don't have an account?
+            <a href="/sign-up">Signup</a>
+          </div>
+          <% if (locals.error) { %>
+          <div class="form-error"><%= error %></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

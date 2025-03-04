@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signup</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <div>
+        <div class="form-container sign-up">
+          <h2 class="form-title">Signup</h2>
+          <form action="/sign-up" method="post">
+            <label>
+              First Name
+              <input
+                type="text"
+                name="firstname"
+                value="<%= locals.values ? values.firstname : '' %>"
+                class="<%= locals.error && error.path == 'firstname' ? 'error' : '' %>"
+                autocomplete="off"
+                required
+              />
+            </label>
+            <label>
+              Last Name
+              <input
+                type="text"
+                name="lastname"
+                value="<%= locals.values ? values.lastname : '' %>"
+                class="<%= locals.error && error.path == 'lastname' ? 'error' : '' %>"
+                autocomplete="off"
+              />
+            </label>
+            <label>
+              Email
+              <input
+                type="email"
+                name="email"
+                value="<%= locals.values ? values.email : '' %>"
+                class="<%= locals.error && error.path == 'email' ? 'error' : '' %>"
+                autocomplete="off"
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                name="password"
+                value="<%= locals.values ? values.password : '' %>"
+                class="<%= locals.error && error.path == 'password' ? 'error' : '' %>"
+                required
+              />
+            </label>
+            <label>
+              Confirm Password
+              <input
+                type="password"
+                name="confirmPassword"
+                value="<%= locals.values ? values.confirmPassword : '' %>"
+                class="<%= locals.error && error.path == 'confirmPassword' ? 'error' : '' %>"
+                required
+              />
+            </label>
+            <button class="form-btn">Sign up</button>
+          </form>
+          <div class="form-redirect">
+            Have an account?
+            <a href="/log-in">Login</a>
+          </div>
+          <% if (locals.error) { %>
+          <div class="form-error"><%= error.msg %></div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

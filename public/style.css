@@ -1,0 +1,7 @@
+:root {
+    --clr-danger: hsl(0, 80%, 50%);
+}
+
+.form-error {
+    color: var(--clr-danger);
+}
