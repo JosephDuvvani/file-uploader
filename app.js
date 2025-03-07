@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import path from "path";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 import { PrismaClient } from "@prisma/client";
-import { indexRouter } from "./routes/indexRouter.js";
+import { driveRouter } from "./routes/driveRouter.js";
 import {
   loginRouter,
   logoutRouter,
@@ -23,6 +23,7 @@ const __dirname = path.resolve();
 const assetsPath = path.join(__dirname, "public");
 
 app.use(express.static(assetsPath));
+app.use(express.json());
 
 app.use(
   session({
@@ -91,6 +92,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(indexRouter, loginRouter, signupRouter, logoutRouter);
+app.use(driveRouter, loginRouter, signupRouter, logoutRouter);
 
 app.listen(3000);

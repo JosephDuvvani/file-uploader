@@ -31,14 +31,6 @@ const loginAuth = (req, res) => {
   })(req, res);
 };
 
-const redirectLogin = (req, res, next) => {
-  if (!req.user) {
-    res.redirect("/log-in");
-    return;
-  }
-  next();
-};
-
 const logoutGet = (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -108,16 +100,4 @@ const signupPost = [
   },
 ];
 
-const homepageGet = (req, res) => {
-  res.render("index");
-};
-
-export {
-  loginGet,
-  redirectLogin,
-  signupGet,
-  signupPost,
-  homepageGet,
-  loginAuth,
-  logoutGet,
-};
+export { loginGet, signupGet, signupPost, loginAuth, logoutGet };

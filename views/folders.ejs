@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+  </head>
+  <body>
+    <a href="/drive/home">Home</a>
+    <% if (locals.parentId) { %>
+    <a href="/drive/folders/<%= parentId %>">Back</a>
+    <% } %> <%- include('createFolder') %> <%- include('uploadFile') %>
+    <h1><%= title %></h1>
+    <% if (locals.folders && folders.length > 0) { %>
+    <ul>
+      <% for (let dir of folders){ %>
+      <li>
+        <a href="/drive/folders/<%= dir.id %>"><%= dir.name %></a>
+        <form action="/drive/folders/delete/<%= dir.id %>" method="post">
+          <button>Delete</button>
+        </form>
+      </li>
+      <% } %>
+    </ul>
+    <% } %> <% if (locals.files && files.length > 0) { %>
+    <ul>
+      <% for (let file of files){ %>
+      <li>
+        <span><%= file.filename %></span>
+        <form action="/drive/files/delete/<%= file.id %>" method="post">
+          <button>Delete</button>
+        </form>
+      </li>
+      <% } %>
+    </ul>
+    <% } %>
+  </body>
+</html>
