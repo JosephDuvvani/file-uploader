@@ -33,7 +33,6 @@ model Session {
 model Folder {
   id        Int      @id @default(autoincrement())
   name      String
-  path      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   files     File[]
@@ -47,7 +46,6 @@ model Folder {
 model File {
   id        Int      @id @default(autoincrement())
   filename  String
-  filepath  String
   size      Int
   mimetype  String
   createdAt DateTime @default(now())
