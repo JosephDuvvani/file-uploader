@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Folder</title>
+  </head>
+  <body>
+    <% if (locals.folder) { %>
+    <form action="/drive/folders/edit/<%= folder.id %>" method="post">
+      <input type="text" name="name" value="<%= folder.name %>" />
+      <button>Save</button>
+    </form>
+    <% } %>
+  </body>
+</html>

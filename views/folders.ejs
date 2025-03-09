@@ -16,6 +16,7 @@
       <% for (let dir of folders){ %>
       <li>
         <a href="/drive/folders/<%= dir.id %>"><%= dir.name %></a>
+        <a href="/drive/folders/edit/<%= dir.id %>">Rename</a>
         <form action="/drive/folders/delete/<%= dir.id %>" method="post">
           <button>Delete</button>
         </form>
@@ -27,6 +28,7 @@
       <% for (let file of files){ %>
       <li>
         <span><%= file.filename %></span>
+        <a href="/drive/files/edit/<%= file.id %>">Rename</a>
         <form action="/drive/files/delete/<%= file.id %>" method="post">
           <button>Delete</button>
         </form>

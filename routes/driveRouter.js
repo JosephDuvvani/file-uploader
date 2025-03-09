@@ -8,6 +8,10 @@ import {
   redirectRoot,
   createDirPost,
   uploadPost,
+  renameFolderPost,
+  renameFilePost,
+  editFolderGet,
+  editFileGet,
 } from "../controllers/driveControllers.js";
 
 const driveRouter = Router();
@@ -19,9 +23,13 @@ driveRouter.get("/drive/home", homepageGet);
 driveRouter.post("/drive/folders/:parentId", createDirPost);
 driveRouter.get("/drive/my-drive", myDriveGet);
 driveRouter.get("/drive/folders/:id", folderGet);
+driveRouter.get("/drive/folders/edit/:id", editFolderGet);
+driveRouter.post("/drive/folders/edit/:id", renameFolderPost);
 driveRouter.post("/drive/folders/delete/:id", deleteFolderPost);
 
 driveRouter.post("/drive/files/upload/:folderId", uploadPost);
+driveRouter.get("/drive/files/edit/:id", editFileGet);
+driveRouter.post("/drive/files/edit/:id", renameFilePost);
 driveRouter.post("/drive/files/delete/:id", deleteFilePost);
 
 export { driveRouter };

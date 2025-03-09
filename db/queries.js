@@ -32,9 +32,10 @@ const addUser = async (user) => {
     },
   });
 
-  const path = `public/data/My-Drive-${newUser.id}`;
+  const name = `My Drive ${newUser.id}`;
+  const path = "public/data/" + name.split(" ").join("-");
 
-  const updateDrive = await prisma.folder.updateMany({
+  await prisma.folder.updateMany({
     where: {
       AND: {
         parentId: {
@@ -46,10 +47,10 @@ const addUser = async (user) => {
       },
     },
     data: {
-      path,
+      name,
     },
   });
-  console.log(updateDrive);
+
   try {
     await fs.mkdir(path);
   } catch (err) {
@@ -62,7 +63,7 @@ const addUser = async (user) => {
 const saveFile = async (fileInfo) => {
   const { filename, filepath, size, mimetype, folderId, ownerId } = fileInfo;
   try {
-    const result = await prisma.file.create({
+    await prisma.file.create({
       data: {
         filename,
         filepath,
@@ -80,10 +81,30 @@ const saveFile = async (fileInfo) => {
         },
       },
     });
-    console.log("File saved to database:", result);
   } catch (err) {
-    console.error("Error saving to database:", err);
+    console.error("Error saving to database");
   }
+};
+
+const getFile = async (id) => {
+  const file = await prisma.file.findUnique({
+    where: {
+      id,
+    },
+  });
+  return file;
+};
+
+const renameFile = async (filename, id) => {
+  const file = await prisma.file.update({
+    where: {
+      id: +id,
+    },
+    data: {
+      filename,
+    },
+  });
+  console.log("File edit successful");
 };
 
 const deleteFile = async (id) => {
@@ -92,13 +113,13 @@ const deleteFile = async (id) => {
       id,
     },
   });
-  console.log("File deleted: ", deleteFile);
+  console.log("File deleted");
   return deleteFile;
 };
 
 //---------- Folder Queries ----------
 
-const addFolder = async (name, parentId, ownerId, path) => {
+const addFolder = async (name, parentId, ownerId) => {
   const exists = await prisma.folder.findMany({
     where: {
       name,
@@ -113,7 +134,6 @@ const addFolder = async (name, parentId, ownerId, path) => {
         name,
         parentId,
         ownerId,
-        path,
       },
     });
     console.log("Directory added to database!");
@@ -169,15 +189,63 @@ const getFolder = async (id, ownerId) => {
 };
 
 const getFolderPath = async (id) => {
+  if (id == null) return "public/data";
   const folder = await prisma.folder.findUnique({
     where: {
       id,
     },
     select: {
-      path: true,
+      parentId: true,
+      name: true,
     },
   });
-  return folder.path;
+  const name = folder.name.split(" ").join("-");
+  const nameArr = [await getFolderPath(folder.parentId), name];
+  return nameArr.join("/");
+};
+
+const folderExists = async (name, parentId) => {
+  const exists = await prisma.folder.findFirst({
+    where: {
+      name: {
+        equals: name,
+      },
+      parentId: {
+        equals: parentId,
+      },
+    },
+  });
+
+  if (!exists) return false;
+  return true;
+};
+
+const filerExists = async (filename, folderId) => {
+  const exists = await prisma.file.findFirst({
+    where: {
+      filename: {
+        equals: filename,
+      },
+      folderId: {
+        equals: folderId,
+      },
+    },
+  });
+
+  if (!exists) return false;
+  return true;
+};
+
+const renameFolder = async (name, id) => {
+  const folder = await prisma.folder.update({
+    where: {
+      id: +id,
+    },
+    data: {
+      name,
+    },
+  });
+  console.log("Folder edit successful");
 };
 
 const deleteFolder = async (id) => {
@@ -186,7 +254,7 @@ const deleteFolder = async (id) => {
       id,
     },
   });
-  console.log("Folder deleted: ", deleteFolder);
+  console.log("Folder deleted");
   return deleteFolder;
 };
 
@@ -194,10 +262,15 @@ export {
   getUserByEmail,
   addUser,
   saveFile,
+  getFile,
   addFolder,
   getDrive,
   getFolder,
   getFolderPath,
+  folderExists,
+  filerExists,
+  renameFile,
+  renameFolder,
   deleteFolder,
   deleteFile,
 };

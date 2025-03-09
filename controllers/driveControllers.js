@@ -9,6 +9,11 @@ import {
   addFolder,
   getFolderPath,
   saveFile,
+  renameFolder,
+  getFile,
+  renameFile,
+  folderExists,
+  filerExists,
 } from "../db/queries.js";
 
 //---------- Load Pages ----------
@@ -32,7 +37,7 @@ const myDriveGet = async (req, res) => {
   const myDrive = await getDrive(req.user.id);
   res.locals.currentDirId = myDrive.id;
   res.render("folders", {
-    title: myDrive.name,
+    title: "My Drive",
     folders: myDrive.children,
     files: myDrive.files,
   });
@@ -50,6 +55,18 @@ const folderGet = async (req, res) => {
     files: folder.files,
     parentId: folder.parentId,
   });
+};
+
+const editFolderGet = async (req, res) => {
+  const { id } = req.params;
+  const folder = await getFolder(+id);
+  res.render("editFolder", { folder });
+};
+
+const editFileGet = async (req, res) => {
+  const { id } = req.params;
+  const file = await getFile(+id);
+  res.render("editFile", { file });
 };
 
 //---------- Create & Upload functions ----------
@@ -75,14 +92,11 @@ const uploadPost = [
       return res.status(400).send("No file uploaded.");
     }
 
-    const { filename, path, size, mimetype } = req.file;
+    const { filename, size, mimetype } = req.file;
     const folderId = +req.params.folderId;
-    const folderPath = await getFolderPath(folderId);
-    const filepath = folderPath + "/" + filename;
     const ownerId = +req.user.id;
     const fileInfo = {
       filename,
-      filepath,
       size,
       mimetype,
       folderId,
@@ -103,6 +117,7 @@ const createDirPost = async (req, res) => {
   const name = req.body.folder;
   const parentPath = await getFolderPath(+req.params.parentId);
   const path = parentPath + "/" + name.split(" ").join("-");
+  console.log("Path: ", path);
   try {
     await fs.mkdir(path);
     console.log("Directory created successfully!");
@@ -111,8 +126,57 @@ const createDirPost = async (req, res) => {
     res.redirect(req.get("referer"));
     return;
   }
-  await addFolder(name, +req.params.parentId, req.user.id, path);
+  await addFolder(name, +req.params.parentId, req.user.id);
   res.redirect(req.get("referer"));
+};
+
+//---------- Update functions ----------
+
+const renameFolderPost = async (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  const folder = await getFolder(id);
+  const exists = await folderExists(name, folder.parentId);
+  if (exists) {
+    console.log("Folder already exists!");
+    res.redirect("/drive/folders/" + folder.parentId);
+    return;
+  }
+
+  try {
+    await renameFolder(name, id);
+    const path = await getFolderPath(folder.parentId);
+    const oldPath = path + "/" + folder.name.split(" ").join("-");
+    const newPath = path + "/" + name.split(" ").join("-");
+    fs.rename(oldPath, newPath);
+    res.redirect("/drive/folders/" + folder.parentId);
+  } catch (err) {
+    console.log(err);
+    res.redirect("/drive/folders/" + folder.parentId);
+  }
+};
+
+const renameFilePost = async (req, res) => {
+  const { id } = req.params;
+  const { filename } = req.body;
+  const file = await getFile(+id);
+  const exists = await filerExists(filename, file.folderId);
+  if (exists) {
+    console.log("File already exists!");
+    res.redirect("/drive/folders/" + file.folderId);
+    return;
+  }
+  try {
+    const path = await getFolderPath(file.folderId);
+    const oldPath = path + "/" + file.filename.split(" ").join("-");
+    const newPath = path + "/" + filename.split(" ").join("-");
+    fs.rename(oldPath, newPath);
+    await renameFile(filename, id);
+    res.redirect("/drive/folders/" + file.folderId);
+  } catch (err) {
+    console.log(err);
+    res.redirect("/drive/folders/" + file.folderId);
+  }
 };
 
 //---------- Delete functions ----------
@@ -120,9 +184,10 @@ const createDirPost = async (req, res) => {
 const deleteFolderPost = async (req, res) => {
   const { id } = req.params;
   try {
-    const delFolder = await deleteFolder(+id);
+    const path = await getFolderPath(+id);
+    fs.rm(path, { recursive: true, force: true });
 
-    fs.rm(delFolder.path, { recursive: true, force: true });
+    const delFolder = await deleteFolder(+id);
 
     const folder = await getFolder(delFolder.parentId, req.user.id);
 
@@ -139,7 +204,9 @@ const deleteFilePost = async (req, res) => {
   try {
     const delFile = await deleteFile(+id);
 
-    fs.rm(delFile.filepath, { recursive: true, force: true });
+    const path = await getFolderPath(delFile.folderId);
+    const filepath = path + "/" + delFile.filename;
+    fs.rm(filepath, { recursive: true, force: true });
 
     const folder = await getFolder(delFile.folderId, req.user.id);
 
@@ -156,6 +223,10 @@ export {
   redirectRoot,
   myDriveGet,
   folderGet,
+  editFolderGet,
+  editFileGet,
+  renameFolderPost,
+  renameFilePost,
   deleteFolderPost,
   deleteFilePost,
   uploadPost,
