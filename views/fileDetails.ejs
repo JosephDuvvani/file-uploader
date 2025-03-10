@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Details</title>
+  </head>
+  <body>
+    <% if (locals.file) { %>
+    <div>
+      <div class="file-details">
+        <div class="name">Title: <%= file.filename %></div>
+        <div class="size">Size: <%= file.size %> bytes</div>
+        <div class="type">File type: <%= file.mimetype %></div>
+        <div class="timestamp">Date uploaded: <%= file.createdAt %></div>
+      </div>
+      <%- include('downloadFile') %>
+    </div>
+    <% } %>
+  </body>
+</html>

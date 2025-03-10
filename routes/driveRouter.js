@@ -12,6 +12,8 @@ import {
   renameFilePost,
   editFolderGet,
   editFileGet,
+  fileDetailsGet,
+  downloadFilePost,
 } from "../controllers/driveControllers.js";
 
 const driveRouter = Router();
@@ -28,8 +30,10 @@ driveRouter.post("/drive/folders/edit/:id", renameFolderPost);
 driveRouter.post("/drive/folders/delete/:id", deleteFolderPost);
 
 driveRouter.post("/drive/files/upload/:folderId", uploadPost);
+driveRouter.get("/drive/files/details/:id", fileDetailsGet);
 driveRouter.get("/drive/files/edit/:id", editFileGet);
 driveRouter.post("/drive/files/edit/:id", renameFilePost);
 driveRouter.post("/drive/files/delete/:id", deleteFilePost);
+driveRouter.post("/drive/files/download/:id", downloadFilePost);
 
 export { driveRouter };

@@ -57,6 +57,16 @@ const folderGet = async (req, res) => {
   });
 };
 
+const fileDetailsGet = async (req, res) => {
+  try {
+    const file = await getFile(+req.params.id);
+    res.render("fileDetails", { file });
+  } catch (err) {
+    console.log(err);
+    res.send("<h1>Cannot find any information about this file!</h1>");
+  }
+};
+
 const editFolderGet = async (req, res) => {
   const { id } = req.params;
   const folder = await getFolder(+id);
@@ -112,6 +122,18 @@ const uploadPost = [
     }
   },
 ];
+
+const downloadFilePost = async (req, res) => {
+  try {
+    const file = await getFile(+req.params.id);
+    const path = await getFolderPath(file.folderId);
+    const filepath = path + "/" + file.filename;
+    res.download(filepath);
+  } catch (err) {
+    console.log(err);
+    res.end();
+  }
+};
 
 const createDirPost = async (req, res) => {
   const name = req.body.folder;
@@ -223,6 +245,7 @@ export {
   redirectRoot,
   myDriveGet,
   folderGet,
+  fileDetailsGet,
   editFolderGet,
   editFileGet,
   renameFolderPost,
@@ -231,4 +254,5 @@ export {
   deleteFilePost,
   uploadPost,
   createDirPost,
+  downloadFilePost,
 };

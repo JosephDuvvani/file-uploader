@@ -28,6 +28,7 @@
       <% for (let file of files){ %>
       <li>
         <span><%= file.filename %></span>
+        <a href="/drive/files/details/<%= file.id %>">Details</a>
         <a href="/drive/files/edit/<%= file.id %>">Rename</a>
         <form action="/drive/files/delete/<%= file.id %>" method="post">
           <button>Delete</button>
