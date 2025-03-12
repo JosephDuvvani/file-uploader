@@ -1,20 +1,24 @@
 import multer from "multer";
 import fs from "node:fs/promises";
-import path from "path";
 import {
   deleteFile,
   deleteFolder,
   getDrive,
   getFolder,
   addFolder,
-  getFolderPath,
   saveFile,
   renameFolder,
   getFile,
   renameFile,
   folderExists,
-  filerExists,
+  fileExists,
+  getFolderPath,
 } from "../db/queries.js";
+import { createClient } from "@supabase/supabase-js";
+import { configDotenv } from "dotenv";
+import path from "path";
+
+configDotenv();
 
 //---------- Load Pages ----------
 
@@ -28,33 +32,48 @@ const redirectRoot = (req, res) => {
 };
 
 const homepageGet = async (req, res) => {
-  const myDrive = await getDrive(req.user.id);
-  res.locals.currentDirId = myDrive.id;
-  res.render("index");
+  try {
+    const myDrive = await getDrive(req.user.id);
+    res.locals.currentDirId = myDrive.id;
+    res.render("index");
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
 };
 
 const myDriveGet = async (req, res) => {
-  const myDrive = await getDrive(req.user.id);
-  res.locals.currentDirId = myDrive.id;
-  res.render("folders", {
-    title: "My Drive",
-    folders: myDrive.children,
-    files: myDrive.files,
-  });
+  try {
+    const myDrive = await getDrive(req.user.id);
+    res.locals.currentDirId = myDrive.id;
+    res.render("folders", {
+      title: "My Drive",
+      folders: myDrive.children,
+      files: myDrive.files,
+    });
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
+  }
 };
 
 const folderGet = async (req, res) => {
-  const folder = await getFolder(req.params.id, req.user.id);
-  res.locals.currentDirId = req.params.id;
-  if (!folder || !folder.parentId) {
-    return res.redirect("/drive/my-drive");
+  try {
+    const folder = await getFolder(+req.params.id, req.user.id);
+    res.locals.currentDirId = req.params.id;
+    if (!folder.parentId) {
+      return res.redirect("/drive/my-drive");
+    }
+    res.render("folders", {
+      title: folder.name,
+      folders: folder.children,
+      files: folder.files,
+      parentId: folder.parentId,
+    });
+  } catch (err) {
+    console.log(err.message);
+    res.status(500).send(err.message);
   }
-  res.render("folders", {
-    title: folder.name,
-    folders: folder.children,
-    files: folder.files,
-    parentId: folder.parentId,
-  });
 };
 
 const fileDetailsGet = async (req, res) => {
@@ -81,16 +100,11 @@ const editFileGet = async (req, res) => {
 
 //---------- Create & Upload functions ----------
 
-const storage = multer.diskStorage({
-  destination: async function (req, file, cb) {
-    const folderPath = await getFolderPath(+req.params.folderId);
-    cb(null, folderPath);
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
+const supabaseUrl = "https://zonxjdffeqqbqxegvubh.supabase.co";
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 const uploadPost = [
@@ -102,23 +116,30 @@ const uploadPost = [
       return res.status(400).send("No file uploaded.");
     }
 
-    const { filename, size, mimetype } = req.file;
-    const folderId = +req.params.folderId;
-    const ownerId = +req.user.id;
     const fileInfo = {
-      filename,
-      size,
-      mimetype,
-      folderId,
-      ownerId,
+      filename: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      folderId: +req.params.folderId,
+      ownerId: +req.user.id,
     };
+
     try {
+      const folderPath = await getFolderPath(fileInfo.folderId);
+      const { data, error } = await supabase.storage
+        .from("files")
+        .upload(folderPath + "/" + file.originalname, file.buffer, {
+          contentType: file.mimetype,
+        });
+
+      if (error) throw error;
+
       await saveFile(fileInfo);
-      console.log("File uploaded and saved successfully!");
-      res.redirect("/drive/folders/" + folderId);
+      console.log("Upload successful.");
+      res.redirect("/drive/folders/" + fileInfo.folderId);
     } catch (err) {
-      console.log("File upload and save unsuccessful!");
-      res.redirect("/drive/folders/" + folderId);
+      console.error(err.message);
+      return res.status(500).send(err.message);
     }
   },
 ];
@@ -126,30 +147,38 @@ const uploadPost = [
 const downloadFilePost = async (req, res) => {
   try {
     const file = await getFile(+req.params.id);
-    const path = await getFolderPath(file.folderId);
-    const filepath = path + "/" + file.filename;
-    res.download(filepath);
+    const { data, error } = await supabase.storage
+      .from("files")
+      .download(`${req.user.id}/${file.filename}`);
+
+    if (error) throw error;
+
+    const tempFilePath = path.join("public", "temp" + file.filename);
+    await fs.writeFile(tempFilePath, Buffer.from(await data.arrayBuffer()));
+
+    res.download(tempFilePath, file.filename, (err) => {
+      if (err) console.error("File download error:", err);
+      fs.unlink(tempFilePath);
+    });
   } catch (err) {
-    console.log(err);
-    res.end();
+    console.error(err.message);
+    return res.status(500).send(err.message);
   }
 };
 
 const createDirPost = async (req, res) => {
   const name = req.body.folder;
-  const parentPath = await getFolderPath(+req.params.parentId);
-  const path = parentPath + "/" + name.split(" ").join("-");
-  console.log("Path: ", path);
+
   try {
-    await fs.mkdir(path);
-    console.log("Directory created successfully!");
+    const exists = await folderExists(name, +req.params.parentId);
+    if (exists) throw new Error("Folder with this name already exists!");
+    await addFolder(name, +req.params.parentId, req.user.id);
+    console.log("Folder created.");
+    return res.redirect(req.get("referer"));
   } catch (err) {
-    console.log(`${name} already exists.`, err.message);
-    res.redirect(req.get("referer"));
-    return;
+    console.error(err.message);
+    return res.status(500).send(err.message);
   }
-  await addFolder(name, +req.params.parentId, req.user.id);
-  res.redirect(req.get("referer"));
 };
 
 //---------- Update functions ----------
@@ -157,24 +186,17 @@ const createDirPost = async (req, res) => {
 const renameFolderPost = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  const folder = await getFolder(id);
-  const exists = await folderExists(name, folder.parentId);
-  if (exists) {
-    console.log("Folder already exists!");
-    res.redirect("/drive/folders/" + folder.parentId);
-    return;
-  }
+  const folder = await getFolder(+id);
 
   try {
+    const exists = await folderExists(name, folder.parentId);
+    if (exists) throw new Error("Folder with this name already exists.");
+
     await renameFolder(name, id);
-    const path = await getFolderPath(folder.parentId);
-    const oldPath = path + "/" + folder.name.split(" ").join("-");
-    const newPath = path + "/" + name.split(" ").join("-");
-    fs.rename(oldPath, newPath);
     res.redirect("/drive/folders/" + folder.parentId);
   } catch (err) {
-    console.log(err);
-    res.redirect("/drive/folders/" + folder.parentId);
+    console.log(err.message);
+    res.status(500).send(err.message);
   }
 };
 
@@ -182,22 +204,15 @@ const renameFilePost = async (req, res) => {
   const { id } = req.params;
   const { filename } = req.body;
   const file = await getFile(+id);
-  const exists = await filerExists(filename, file.folderId);
-  if (exists) {
-    console.log("File already exists!");
-    res.redirect("/drive/folders/" + file.folderId);
-    return;
-  }
   try {
-    const path = await getFolderPath(file.folderId);
-    const oldPath = path + "/" + file.filename.split(" ").join("-");
-    const newPath = path + "/" + filename.split(" ").join("-");
-    fs.rename(oldPath, newPath);
+    const exists = await fileExists(filename, file.folderId);
+    if (exists) throw new Error("File with this name already exists.");
+
     await renameFile(filename, id);
     res.redirect("/drive/folders/" + file.folderId);
   } catch (err) {
-    console.log(err);
-    res.redirect("/drive/folders/" + file.folderId);
+    console.log(err.message);
+    res.status(500).send(err.message);
   }
 };
 
@@ -206,37 +221,50 @@ const renameFilePost = async (req, res) => {
 const deleteFolderPost = async (req, res) => {
   const { id } = req.params;
   try {
-    const path = await getFolderPath(+id);
-    fs.rm(path, { recursive: true, force: true });
+    const folderPath = await getFolderPath(+id);
+
+    const { data, error } = await supabase.storage
+      .from("files")
+      .list(folderPath);
+
+    if (error) throw error;
+
+    const filepaths = data.map((file) => `${folderPath}/${file.name}`);
+
+    const { error: deleteError } = await supabase.storage
+      .from("files")
+      .remove(filepaths);
+
+    if (deleteError) throw error;
 
     const delFolder = await deleteFolder(+id);
-
-    const folder = await getFolder(delFolder.parentId, req.user.id);
-
-    res.redirect("/drive/folders/" + folder.id);
-    return;
+    console.log("Folder deleted.");
+    res.redirect("/drive/folders/" + delFolder.parentId);
   } catch (err) {
-    console.log(err);
-    res.redirect("/drive/my-drive");
+    console.error(err.message);
+    return res.status(500).send(err.message);
   }
 };
 
 const deleteFilePost = async (req, res) => {
   const { id } = req.params;
   try {
-    const delFile = await deleteFile(+id);
+    const file = await getFile(+id);
+    const folderPath = await getFolderPath(file.folderId);
 
-    const path = await getFolderPath(delFile.folderId);
-    const filepath = path + "/" + delFile.filename;
-    fs.rm(filepath, { recursive: true, force: true });
+    const { data, error } = await supabase.storage
+      .from("files")
+      .remove([`${folderPath}/${file.filename}`]);
 
-    const folder = await getFolder(delFile.folderId, req.user.id);
+    if (error) throw error;
 
-    res.redirect("/drive/folders/" + folder.id);
-    return;
+    await deleteFile(+id);
+
+    console.log("File deleted.");
+    res.redirect("/drive/folders/" + file.folderId);
   } catch (err) {
     console.log(err);
-    res.redirect("/drive/my-drive");
+    return res.status(500).send(err.message);
   }
 };
 
