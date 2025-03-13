@@ -1,4 +1,3 @@
-import multer from "multer";
 import fs from "node:fs/promises";
 import {
   deleteFile,
@@ -14,9 +13,9 @@ import {
   fileExists,
   getFolderPath,
 } from "../db/queries.js";
-import { createClient } from "@supabase/supabase-js";
 import { configDotenv } from "dotenv";
 import path from "path";
+import { upload, supabase, filePaths } from "../storage/storage.js";
 
 configDotenv();
 
@@ -99,13 +98,6 @@ const editFileGet = async (req, res) => {
 };
 
 //---------- Create & Upload functions ----------
-
-const supabaseUrl = "https://zonxjdffeqqbqxegvubh.supabase.co";
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
 
 const uploadPost = [
   upload.single("file"),
@@ -223,19 +215,15 @@ const deleteFolderPost = async (req, res) => {
   try {
     const folderPath = await getFolderPath(+id);
 
-    const { data, error } = await supabase.storage
-      .from("files")
-      .list(folderPath);
+    const paths = await filePaths(folderPath);
 
-    if (error) throw error;
+    if (paths.length > 0) {
+      const { error: deleteError } = await supabase.storage
+        .from("files")
+        .remove(paths);
 
-    const filepaths = data.map((file) => `${folderPath}/${file.name}`);
-
-    const { error: deleteError } = await supabase.storage
-      .from("files")
-      .remove(filepaths);
-
-    if (deleteError) throw error;
+      if (deleteError) throw deleteError;
+    }
 
     const delFolder = await deleteFolder(+id);
     console.log("Folder deleted.");
