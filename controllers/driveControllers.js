@@ -200,7 +200,15 @@ const renameFilePost = async (req, res) => {
     const exists = await fileExists(filename, file.folderId);
     if (exists) throw new Error("File with this name already exists.");
 
+    const folderPath = await getFolderPath(file.folderId);
+    const { error: renameError } = await supabase.storage
+      .from("files")
+      .move(`${folderPath}/${file.filename}`, `${folderPath}/${filename}`);
+
+    if (renameError) throw renameError;
+
     await renameFile(filename, id);
+    console.log("File renamed to ", filename);
     res.redirect("/drive/folders/" + file.folderId);
   } catch (err) {
     console.log(err.message);
