@@ -22,4 +22,25 @@ const filePaths = async (folderPath) => {
   return paths;
 };
 
-export { supabase, upload, filePaths };
+const renameStorageFolder = async (folderPath, newPath) => {
+  const { data, error } = await supabase.storage.from("files").list(folderPath);
+
+  if (error) throw error;
+
+  for (let file of data) {
+    if (file.id) {
+      const { error: renameError } = await supabase.storage
+        .from("files")
+        .move(`${folderPath}/${file.name}`, `${newPath}/${file.name}`);
+
+      if (renameError) throw renameError;
+    } else {
+      await renameStorageFolder(
+        `${folderPath}/${file.name}`,
+        `${newPath}/${file.name}`
+      );
+    }
+  }
+};
+
+export { supabase, upload, filePaths, renameStorageFolder };
