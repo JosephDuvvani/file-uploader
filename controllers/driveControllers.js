@@ -15,7 +15,12 @@ import {
 } from "../db/queries.js";
 import { configDotenv } from "dotenv";
 import path from "path";
-import { upload, supabase, filePaths } from "../storage/storage.js";
+import {
+  upload,
+  supabase,
+  filePaths,
+  renameStorageFolder,
+} from "../storage/storage.js";
 
 configDotenv();
 
@@ -184,7 +189,14 @@ const renameFolderPost = async (req, res) => {
     const exists = await folderExists(name, folder.parentId);
     if (exists) throw new Error("Folder with this name already exists.");
 
+    const folderPath = await getFolderPath(folder.parentId);
+    await renameStorageFolder(
+      `${folderPath}/${folder.name}`,
+      `${folderPath}/${name}`
+    );
+
     await renameFolder(name, id);
+    console.log("Folder renamed to, ", name);
     res.redirect("/drive/folders/" + folder.parentId);
   } catch (err) {
     console.log(err.message);
@@ -201,6 +213,7 @@ const renameFilePost = async (req, res) => {
     if (exists) throw new Error("File with this name already exists.");
 
     const folderPath = await getFolderPath(file.folderId);
+
     const { error: renameError } = await supabase.storage
       .from("files")
       .move(`${folderPath}/${file.filename}`, `${folderPath}/${filename}`);
@@ -208,7 +221,7 @@ const renameFilePost = async (req, res) => {
     if (renameError) throw renameError;
 
     await renameFile(filename, id);
-    console.log("File renamed to ", filename);
+    console.log("File renamed to, ", filename);
     res.redirect("/drive/folders/" + file.folderId);
   } catch (err) {
     console.log(err.message);
