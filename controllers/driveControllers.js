@@ -63,7 +63,7 @@ const myDriveGet = async (req, res) => {
 
 const folderGet = async (req, res) => {
   try {
-    const folder = await getFolder(+req.params.id, req.user.id);
+    const folder = await getFolder(req.params.id, req.user.id);
     res.locals.currentDirId = req.params.id;
     if (!folder.parentId) {
       return res.redirect("/drive/my-drive");
@@ -82,7 +82,7 @@ const folderGet = async (req, res) => {
 
 const fileDetailsGet = async (req, res) => {
   try {
-    const file = await getFile(+req.params.id);
+    const file = await getFile(req.params.id);
     res.render("fileDetails", { file });
   } catch (err) {
     console.log(err);
@@ -92,13 +92,13 @@ const fileDetailsGet = async (req, res) => {
 
 const editFolderGet = async (req, res) => {
   const { id } = req.params;
-  const folder = await getFolder(+id);
+  const folder = await getFolder(id);
   res.render("editFolder", { folder });
 };
 
 const editFileGet = async (req, res) => {
   const { id } = req.params;
-  const file = await getFile(+id);
+  const file = await getFile(id);
   res.render("editFile", { file });
 };
 
@@ -117,8 +117,8 @@ const uploadPost = [
       filename: file.originalname,
       size: file.size,
       mimetype: file.mimetype,
-      folderId: +req.params.folderId,
-      ownerId: +req.user.id,
+      folderId: req.params.folderId,
+      ownerId: req.user.id,
     };
 
     try {
@@ -143,7 +143,7 @@ const uploadPost = [
 
 const downloadFilePost = async (req, res) => {
   try {
-    const file = await getFile(+req.params.id);
+    const file = await getFile(req.params.id);
     const { data, error } = await supabase.storage
       .from("files")
       .download(`${req.user.id}/${file.filename}`);
@@ -167,9 +167,9 @@ const createDirPost = async (req, res) => {
   const name = req.body.folder;
 
   try {
-    const exists = await folderExists(name, +req.params.parentId);
+    const exists = await folderExists(name, req.params.parentId);
     if (exists) throw new Error("Folder with this name already exists!");
-    await addFolder(name, +req.params.parentId, req.user.id);
+    await addFolder(name, req.params.parentId, req.user.id);
     console.log("Folder created.");
     return res.redirect(req.get("referer"));
   } catch (err) {
@@ -183,7 +183,7 @@ const createDirPost = async (req, res) => {
 const renameFolderPost = async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
-  const folder = await getFolder(+id);
+  const folder = await getFolder(id);
 
   try {
     const exists = await folderExists(name, folder.parentId);
@@ -207,7 +207,7 @@ const renameFolderPost = async (req, res) => {
 const renameFilePost = async (req, res) => {
   const { id } = req.params;
   const { filename } = req.body;
-  const file = await getFile(+id);
+  const file = await getFile(id);
   try {
     const exists = await fileExists(filename, file.folderId);
     if (exists) throw new Error("File with this name already exists.");
@@ -234,7 +234,7 @@ const renameFilePost = async (req, res) => {
 const deleteFolderPost = async (req, res) => {
   const { id } = req.params;
   try {
-    const folderPath = await getFolderPath(+id);
+    const folderPath = await getFolderPath(id);
 
     const paths = await filePaths(folderPath);
 
@@ -246,7 +246,7 @@ const deleteFolderPost = async (req, res) => {
       if (deleteError) throw deleteError;
     }
 
-    const delFolder = await deleteFolder(+id);
+    const delFolder = await deleteFolder(id);
     console.log("Folder deleted.");
     res.redirect("/drive/folders/" + delFolder.parentId);
   } catch (err) {
@@ -258,7 +258,7 @@ const deleteFolderPost = async (req, res) => {
 const deleteFilePost = async (req, res) => {
   const { id } = req.params;
   try {
-    const file = await getFile(+id);
+    const file = await getFile(id);
     const folderPath = await getFolderPath(file.folderId);
 
     const { data, error } = await supabase.storage
@@ -267,7 +267,7 @@ const deleteFilePost = async (req, res) => {
 
     if (error) throw error;
 
-    await deleteFile(+id);
+    await deleteFile(id);
 
     console.log("File deleted.");
     res.redirect("/drive/folders/" + file.folderId);

@@ -104,7 +104,7 @@ const fileExists = async (filename, folderId) => {
 const renameFile = async (filename, id) => {
   await prisma.file.update({
     where: {
-      id: +id,
+      id: id,
     },
     data: {
       filename,
@@ -210,7 +210,7 @@ const folderExists = async (name, parentId) => {
 const renameFolder = async (name, id) => {
   await prisma.folder.update({
     where: {
-      id: +id,
+      id: id,
     },
     data: {
       name,
