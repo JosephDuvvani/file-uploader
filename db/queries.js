@@ -185,7 +185,7 @@ const getFolderPath = async (id) => {
     },
   });
 
-  const name = folder.name.split(" ").join("-");
+  const name = folder.name;
   if (!folder.parentId) return name;
   const folderPath = (await getFolderPath(folder.parentId)) + "/" + name;
   return folderPath;
