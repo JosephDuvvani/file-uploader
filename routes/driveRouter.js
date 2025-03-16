@@ -14,6 +14,10 @@ import {
   editFileGet,
   fileDetailsGet,
   downloadFilePost,
+  shareFolderGet,
+  shareFolderPost,
+  sharedFolderGet,
+  sharedFileDetailsGet,
 } from "../controllers/driveControllers.js";
 
 const driveRouter = Router();
@@ -35,5 +39,11 @@ driveRouter.get("/drive/files/edit/:id", editFileGet);
 driveRouter.post("/drive/files/edit/:id", renameFilePost);
 driveRouter.post("/drive/files/delete/:id", deleteFilePost);
 driveRouter.post("/drive/files/download/:id", downloadFilePost);
+
+driveRouter.get("/drive/folders/share/:id", shareFolderGet);
+driveRouter.post("/drive/folders/share/:id", shareFolderPost);
+
+driveRouter.get("/share/:id", sharedFolderGet);
+driveRouter.get("/share/file/details/:id", sharedFileDetailsGet);
 
 export { driveRouter };

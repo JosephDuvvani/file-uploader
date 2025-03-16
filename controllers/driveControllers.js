@@ -12,6 +12,8 @@ import {
   folderExists,
   fileExists,
   getFolderPath,
+  shareFolder,
+  getShareDataByFolderId,
 } from "../db/queries.js";
 import { configDotenv } from "dotenv";
 import path from "path";
@@ -144,9 +146,19 @@ const uploadPost = [
 const downloadFilePost = async (req, res) => {
   try {
     const file = await getFile(req.params.id);
+    const share = await getShareDataByFolderId(file.folderId);
+
+    if (
+      (!share && !req.user) ||
+      (!share && req.user && req.use.id !== file.ownerId)
+    )
+      throw new Error("Cannot download this file.");
+
+    const folderpath = await getFolderPath(file.folderId);
+
     const { data, error } = await supabase.storage
       .from("files")
-      .download(`${req.user.id}/${file.filename}`);
+      .download(`${folderpath}/${file.filename}`);
 
     if (error) throw error;
 
@@ -277,6 +289,65 @@ const deleteFilePost = async (req, res) => {
   }
 };
 
+//---------- Share ----------
+
+const shareFolderGet = (req, res) => {
+  const { id } = req.params;
+  res.render("shareFolder", { shareId: id });
+};
+
+const shareFolderPost = async (req, res) => {
+  const { expireAt } = req.body;
+  const { id } = req.params;
+  const expiryTime = new Date();
+  expiryTime.setHours(expiryTime.getHours() + expireAt * 24);
+
+  try {
+    await shareFolder(id, expiryTime);
+    await getShareDataByFolderId(id);
+
+    res.render("shareLink", {
+      link: `${req.protocol}://${req.get("host")}/share/${id}`,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err.message);
+  }
+};
+
+const sharedFolderGet = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const share = await getShareDataByFolderId(id);
+
+    if (!share) throw new Error("Cannot find this record.");
+
+    res.render("sharedFolder", {
+      title: share.folder.name,
+      folders: share.folder.children,
+      files: share.folder.files,
+      expiryTime: share.expiresAt,
+    });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err.message);
+  }
+};
+
+const sharedFileDetailsGet = async (req, res) => {
+  try {
+    const file = await getFile(req.params.id);
+    const shared = await getShareDataByFolderId(file.folderId);
+
+    if (!shared) return res.status(400).send("Cannot view file details.");
+
+    res.render("fileDetails", { file });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send(err.message);
+  }
+};
+
 export {
   homepageGet,
   redirectRoot,
@@ -292,4 +363,8 @@ export {
   uploadPost,
   createDirPost,
   downloadFilePost,
+  shareFolderGet,
+  shareFolderPost,
+  sharedFolderGet,
+  sharedFileDetailsGet,
 };
