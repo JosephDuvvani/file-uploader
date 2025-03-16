@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
-import fs from "node:fs/promises";
 
 const prisma = new PrismaClient();
 
@@ -227,6 +226,80 @@ const deleteFolder = async (id) => {
   return deleteFolder;
 };
 
+const shareFolder = async (folderId, expiresAt) => {
+  const exists = await prisma.shareFolder.findFirst({
+    where: {
+      folderId,
+    },
+  });
+  if (!exists) {
+    await prisma.shareFolder.create({
+      data: {
+        folderId,
+        expiresAt,
+      },
+    });
+  } else {
+    await prisma.shareFolder.update({
+      where: {
+        id: exists.id,
+      },
+      data: {
+        folderId,
+        expiresAt,
+      },
+    });
+  }
+
+  const folder = await prisma.folder.findUnique({
+    where: {
+      id: folderId,
+    },
+    include: {
+      children: true,
+    },
+  });
+
+  const childFolders = folder.children;
+
+  for (let child of childFolders) {
+    await shareFolder(child.id, expiresAt);
+  }
+};
+
+const getShareDataByFolderId = async (id) => {
+  const data = await prisma.shareFolder.findFirst({
+    where: {
+      folderId: id,
+    },
+    include: {
+      folder: {
+        include: {
+          children: true,
+          files: true,
+        },
+      },
+    },
+  });
+  return data;
+};
+
+const deleteExpiredSharedFolders = async () => {
+  const now = new Date();
+  try {
+    const result = await prisma.shareFolder.deleteMany({
+      where: {
+        expiresAt: {
+          lt: now,
+        },
+      },
+    });
+    console.log(`Deleted ${result.count} expired folder shares.`);
+  } catch (error) {
+    console.error("Error deleting expired rows:", error);
+  }
+};
+
 export {
   getUserByEmail,
   addUser,
@@ -242,4 +315,7 @@ export {
   renameFolder,
   deleteFolder,
   deleteFile,
+  shareFolder,
+  getShareDataByFolderId,
+  deleteExpiredSharedFolders,
 };
