@@ -12,6 +12,8 @@ import {
   logoutRouter,
   signupRouter,
 } from "./routes/authRouter.js";
+import { schedule } from "node-cron";
+import { deleteExpiredSharedFolders } from "./db/queries.js";
 
 const app = express();
 
@@ -93,5 +95,8 @@ app.use((req, res, next) => {
 });
 
 app.use(driveRouter, loginRouter, signupRouter, logoutRouter);
+
+schedule("* * * * *", deleteExpiredSharedFolders);
+deleteExpiredSharedFolders();
 
 app.listen(3000);
