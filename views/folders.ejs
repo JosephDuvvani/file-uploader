@@ -17,6 +17,7 @@
       <li>
         <a href="/drive/folders/<%= dir.id %>"><%= dir.name %></a>
         <a href="/drive/folders/edit/<%= dir.id %>">Rename</a>
+        <a href="/drive/folders/share/<%= dir.id %>">Share</a>
         <form action="/drive/folders/delete/<%= dir.id %>" method="post">
           <button>Delete</button>
         </form>

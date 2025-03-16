@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shared Folder: <% if (locals.title) { %> <%= title %> <% } %></title>
+  </head>
+  <body>
+    <% if (locals.title) { %>
+    <h1><%= title %></h1>
+    <% } %> <% if (locals.expiryTime) { %>
+    <div>Expires: <%= expiryTime %></div>
+    <% } %> <% if (locals.folders && folders.length > 0) { %>
+    <ul>
+      <% for (let dir of folders){ %>
+      <li>
+        <a href="/share/<%= dir.id %>"><%= dir.name %></a>
+      </li>
+      <% } %>
+    </ul>
+    <% } %> <% if (locals.files && files.length > 0) { %>
+    <ul>
+      <% for (let file of files){ %>
+      <li>
+        <span><%= file.filename %></span>
+        <a href="/share/file/details/<%= file.id %>">Details</a>
+      </li>
+      <% } %>
+    </ul>
+    <% } %>
+  </body>
+</html>
