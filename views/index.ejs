@@ -4,12 +4,21 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="/drive.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
   </head>
   <body>
-    <h1>Homepage</h1>
-    <a href="/log-out">Logout</a>
-    <%- include('uploadFile') %> <%- include('createFolder') %>
-    <a href="/drive/my-drive">My Drive</a>
+    <%- include('header', {title: 'Home'}) %>
+    <div class="nav"></div>
+    <div class="drive-forms">
+      <%- include('uploadFile') %> <%- include('createFolder') %>
+    </div>
+    <a href="/drive/my-drive" class="folder">
+      <i class="fa fa-folder" aria-hidden="true"></i>
+      My Drive
+    </a>
   </body>
 </html>

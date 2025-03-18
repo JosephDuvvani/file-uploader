@@ -1,0 +1,228 @@
+* {
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+    font-weight: inherit;
+    box-sizing: border-box;
+    color: inherit;
+}
+
+ul {
+    list-style: none;
+}
+
+button {
+    cursor: pointer;
+}
+
+.btn {
+    border: none;
+    color: #fff;
+    background-color: hsl(8, 73%, 56%);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.pos-r {
+    position: relative;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    color: #fff;
+    background-color: hsl(200, 15%, 15%);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.page-title {
+    flex: 1;
+    font-size: 2rem;
+    font-weight: 600;
+    padding: .2rem .5rem;
+}
+
+.logout {
+    display: block;
+    width: fit-content;
+    color: #fff;
+    background-color: hsl(229, 43%, 44%);
+    text-decoration: none;
+    padding: 5px 10px;
+    margin-right: .5rem;
+    border-radius: 4px;
+}
+
+.nav {
+    display: flex;
+    background-color: hsl(229, 43%, 44%);
+    margin-bottom: 2rem;
+    min-height: 27.59px;
+}
+
+.nav a {
+    display: block;
+    text-decoration: none;
+    padding: .3rem .5em;
+    border-right: 3px solid hsl(200, 15%, 15%);
+}
+
+.nav a:hover {
+    background-color: hsl(229, 43%, 54%);
+}
+
+.drive-forms {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 25rem);
+    margin: auto;
+    max-width: 52rem;
+    gap: 1rem 2rem;
+}
+
+.form-data {
+    display: grid;
+    grid-template-columns: 1fr min-content;
+    align-items: center;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid hsl(8, 73%, 56%);
+}
+
+.form-data input {
+    border: none;
+    color: #fff;
+    background-color: transparent;
+}
+
+.form-data input:focus {
+    outline: none;
+}
+
+a.folder,
+.file {
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    align-items: center;
+    gap: 1rem;
+    text-decoration: none;
+    color: #fff;
+    cursor: context-menu;
+    padding: 1rem;
+}
+
+a.folder:hover,
+.file:hover {
+    background-color: hsl(200, 15%, 25%);
+}
+
+a.folder i {
+    font-size: 2rem;
+}
+
+.file i {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.item-btn {
+    display: block;
+    color: #fff;
+}
+
+form .item-btn {
+    background-color: transparent;
+    border: none;
+}
+
+.item-btns {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.item-btn {
+    opacity: 0;
+    text-align: center;
+    width: 1.4rem;
+}
+
+.item-btn.info-btn {
+    fill: currentColor;
+    width: 1.4rem;
+}
+
+.item:hover .item-btns .item-btn,
+a.folder:focus + .item-btns .item-btn,
+.item-btn:focus {
+    opacity: 1;
+}
+
+.folder-content {
+    margin-top: 1rem;
+}
+
+.details-container {
+    padding: 1rem;
+}
+
+.file-details {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.file-details div {
+    border-bottom: 1px solid currentColor;
+    padding-bottom: .5rem;
+}
+
+.item-form {
+    display: grid;
+    gap: 1rem;
+    margin: auto;
+    margin-top: 5rem;
+    max-width: 25rem;
+}
+
+.item-form label {
+    justify-self: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.item-form input {
+    color: hsl(200, 10%, 10%);
+    background-color: hsl(207, 22%, 90%);
+    padding: .5rem;
+    border: 2px solid transparent;
+    border-radius: 4px;
+}
+
+.item-form input:focus {
+    outline: none;
+    border-color: hsl(8, 73%, 56%);
+    background-color: hsl(0, 0%, 100%);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
+input[type=number] {
+    -moz-appearance: textfield;
+  }
+
+.item-form button {
+    padding-block: .5rem;
+}

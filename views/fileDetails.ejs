@@ -4,10 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Details</title>
+    <link rel="stylesheet" href="/drive.css" />
   </head>
   <body>
-    <% if (locals.file) { %>
-    <div>
+    <% if (locals.file) { %> <%- include('header', {title: 'File Info'}) %>
+    <div class="details-container">
       <div class="file-details">
         <div class="name">Title: <%= file.filename %></div>
         <div class="size">Size: <%= file.size %> bytes</div>

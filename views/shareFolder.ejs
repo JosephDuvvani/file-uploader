@@ -4,12 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Share Folder</title>
+    <link rel="stylesheet" href="/drive.css" />
   </head>
   <body>
     <% if (locals.shareId) { %>
-    <form action="/drive/folders/share/<%= shareId %>" method="post">
-      <input type="number" name="expireAt" placeholder="Number of days" />
-      <button>Share</button>
+    <form
+      action="/drive/folders/share/<%= shareId %>"
+      method="post"
+      class="item-form"
+    >
+      <label for="share">Share Folder</label>
+      <input
+        type="number"
+        id="share"
+        name="expireAt"
+        placeholder="Number of days"
+      />
+      <button class="btn">Share</button>
     </form>
     <% } %>
   </body>

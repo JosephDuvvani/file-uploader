@@ -4,12 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Edit Folder</title>
+    <link rel="stylesheet" href="/drive.css" />
   </head>
   <body>
     <% if (locals.file) { %>
-    <form action="/drive/files/edit/<%= file.id %>" method="post">
-      <input type="text" name="filename" value="<%= file.filename %>" />
-      <button>Save</button>
+    <form
+      action="/drive/files/edit/<%= file.id %>"
+      method="post"
+      class="item-form"
+    >
+      <label for="rename">Rename File</label>
+      <input
+        type="text"
+        id="rename"
+        name="filename"
+        value="<%= file.filename %>"
+      />
+      <button class="btn">Save</button>
     </form>
     <% } %>
   </body>

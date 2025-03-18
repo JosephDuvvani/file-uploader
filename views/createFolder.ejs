@@ -1,4 +1,11 @@
 <form action="/drive/folders/<%= currentDirId %>" method="post">
-  <input type="text" name="folder" placeholder="New Folder" />
-  <button class="btn btn-default">Create</button>
+  <div class="folder-form form-data">
+    <input
+      type="text"
+      name="folder"
+      placeholder="New Folder"
+      autocomplete="off"
+    />
+    <button class="btn">Create</button>
+  </div>
 </form>
