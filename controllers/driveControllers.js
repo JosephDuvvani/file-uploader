@@ -150,7 +150,7 @@ const downloadFilePost = async (req, res) => {
 
     if (
       (!share && !req.user) ||
-      (!share && req.user && req.use.id !== file.ownerId)
+      (!share && req.user && req.user.id !== file.ownerId)
     )
       throw new Error("Cannot download this file.");
 
