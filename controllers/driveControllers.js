@@ -250,7 +250,7 @@ const deleteFolderPost = async (req, res) => {
 
     const paths = await filePaths(folderPath);
 
-    if (paths.length > 0) {
+    if (paths.length > 0 && paths.length !== 1 && paths[0].length !== 0) {
       const { error: deleteError } = await supabase.storage
         .from("files")
         .remove(paths);
