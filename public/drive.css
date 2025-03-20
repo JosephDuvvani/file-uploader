@@ -173,6 +173,12 @@ a.folder:focus + .item-btns .item-btn,
     opacity: 1;
 }
 
+.btn.details {
+    text-decoration: none;
+    background-color: hsl(229, 43%, 54%);
+    opacity: 1;
+}
+
 .folder-content {
     margin-top: 1rem;
 }
@@ -231,4 +237,17 @@ input[type=number] {
 
 .item-form button {
     padding-block: .5rem;
+}
+
+.expiry-date {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .8rem;
+    margin-left: 1rem;
+    margin-top: 1rem;
+}
+
+.expiry-date i {
+    font-size: 1rem;
 }
