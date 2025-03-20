@@ -104,6 +104,12 @@ header {
     outline: none;
 }
 
+.form-error {
+    font-size: .9rem;
+    color: hsl(0, 97%, 42%);
+    position: absolute;
+}
+
 a.folder,
 .file {
     display: grid;

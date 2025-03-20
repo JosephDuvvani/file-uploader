@@ -9,8 +9,6 @@ import {
   renameFolder,
   getFile,
   renameFile,
-  folderExists,
-  fileExists,
   getFolderPath,
   shareFolder,
   getShareDataByFolderId,
@@ -23,6 +21,12 @@ import {
   filePaths,
   renameStorageFolder,
 } from "../storage/storage.js";
+import {
+  validateFileName,
+  validateFolderName,
+  validateFolderRename,
+} from "../utils/utils.js";
+import { validationResult } from "express-validator";
 
 configDotenv();
 
@@ -51,11 +55,11 @@ const homepageGet = async (req, res) => {
 const myDriveGet = async (req, res) => {
   try {
     const myDrive = await getDrive(req.user.id);
-    res.locals.currentDirId = myDrive.id;
     res.render("folders", {
       title: "My Drive",
       folders: myDrive.children,
       files: myDrive.files,
+      currentDirId: myDrive.id,
     });
   } catch (err) {
     console.log(err.message);
@@ -66,7 +70,6 @@ const myDriveGet = async (req, res) => {
 const folderGet = async (req, res) => {
   try {
     const folder = await getFolder(req.params.id, req.user.id);
-    res.locals.currentDirId = req.params.id;
     if (!folder.parentId) {
       return res.redirect("/drive/my-drive");
     }
@@ -75,6 +78,7 @@ const folderGet = async (req, res) => {
       folders: folder.children,
       files: folder.files,
       parentId: folder.parentId,
+      currentDirId: folder.id,
     });
   } catch (err) {
     console.log(err.message);
@@ -175,71 +179,106 @@ const downloadFilePost = async (req, res) => {
   }
 };
 
-const createDirPost = async (req, res) => {
-  const name = req.body.folder;
+const createDirPost = [
+  validateFolderName,
+  async (req, res) => {
+    const { errors } = validationResult(req);
 
-  try {
-    const exists = await folderExists(name, req.params.parentId);
-    if (exists) throw new Error("Folder with this name already exists!");
-    await addFolder(name, req.params.parentId, req.user.id);
-    console.log("Folder created.");
-    return res.redirect(req.get("referer"));
-  } catch (err) {
-    console.error(err.message);
-    return res.status(500).send(err.message);
-  }
-};
+    if (errors.length > 0) {
+      const folder = await getFolder(req.params.parentId, req.user.id);
+
+      res.locals = {
+        title: !folder.parentId ? "My Drive" : folder.name,
+        folders: folder.children,
+        files: folder.files,
+        parentId: folder.parentId,
+        currentDirId: folder.id,
+        currentUser: req.user,
+        error: errors[0],
+      };
+      res.render("folders");
+      return res.end();
+    }
+    const name = req.body.folder;
+
+    try {
+      await addFolder(name, req.params.parentId, req.user.id);
+      console.log("Folder created.");
+      return res.redirect(req.get("referer"));
+    } catch (err) {
+      console.error(err.message);
+      return res.status(500).send(err.message);
+    }
+  },
+];
 
 //---------- Update functions ----------
 
-const renameFolderPost = async (req, res) => {
-  const { id } = req.params;
-  const { name } = req.body;
-  const folder = await getFolder(id);
+const renameFolderPost = [
+  validateFolderRename,
+  async (req, res) => {
+    const { errors } = validationResult(req);
+    const { id } = req.params;
+    const { name } = req.body;
+    const folder = await getFolder(id);
 
-  try {
-    const exists = await folderExists(name, folder.parentId);
-    if (exists) throw new Error("Folder with this name already exists.");
+    if (errors.length > 0) {
+      res.locals = {
+        folder,
+        error: errors[0],
+      };
+      res.render("editFolder");
+      return;
+    }
 
-    const folderPath = await getFolderPath(folder.parentId);
-    await renameStorageFolder(
-      `${folderPath}/${folder.name}`,
-      `${folderPath}/${name}`
-    );
+    try {
+      const folderPath = await getFolderPath(folder.parentId);
+      await renameStorageFolder(
+        `${folderPath}/${folder.name}`,
+        `${folderPath}/${name}`
+      );
 
-    await renameFolder(name, id);
-    console.log("Folder renamed to, ", name);
-    res.redirect("/drive/folders/" + folder.parentId);
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).send(err.message);
-  }
-};
+      await renameFolder(name, id);
+      console.log("Folder renamed to, ", name);
+      res.redirect("/drive/folders/" + folder.parentId);
+    } catch (err) {
+      console.log(err.message, err);
+      res.status(500).send(err.message);
+    }
+  },
+];
 
-const renameFilePost = async (req, res) => {
-  const { id } = req.params;
-  const { filename } = req.body;
-  const file = await getFile(id);
-  try {
-    const exists = await fileExists(filename, file.folderId);
-    if (exists) throw new Error("File with this name already exists.");
+const renameFilePost = [
+  validateFileName,
+  async (req, res) => {
+    const { id } = req.params;
+    const { filename } = req.body;
+    const file = await getFile(id);
+    const { errors } = validationResult(req);
 
-    const folderPath = await getFolderPath(file.folderId);
+    if (errors.length > 0) {
+      res.locals = { file, error: errors[0] };
+      return res.render("editFile");
+    }
 
-    const { error: renameError } = await supabase.storage
-      .from("files")
-      .move(`${folderPath}/${file.filename}`, `${folderPath}/${filename}`);
+    try {
+      const folderPath = await getFolderPath(file.folderId);
 
-    if (renameError) throw renameError;
+      const { error: renameError } = await supabase.storage
+        .from("files")
+        .move(`${folderPath}/${file.filename}`, `${folderPath}/${filename}`);
 
-    await renameFile(filename, id);
-    console.log("File renamed to, ", filename);
-    res.redirect("/drive/folders/" + file.folderId);
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).send(err.message);
-  }
-};
+      if (renameError) throw renameError;
+
+      await renameFile(filename, id);
+      console.log("File renamed to, ", filename);
+      res.redirect("/drive/folders/" + file.folderId);
+    } catch (err) {
+      console.log(err.message);
+      res.status(500).send(err.message);
+    }
+  },
+];
 
 //---------- Delete functions ----------
 
@@ -250,7 +289,7 @@ const deleteFolderPost = async (req, res) => {
 
     const paths = await filePaths(folderPath);
 
-    if (paths.length > 0 && paths.length !== 1 && paths[0].length !== 0) {
+    if (paths.length > 0) {
       const { error: deleteError } = await supabase.storage
         .from("files")
         .remove(paths);

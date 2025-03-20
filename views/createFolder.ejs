@@ -1,11 +1,16 @@
-<form action="/drive/folders/<%= currentDirId %>" method="post">
-  <div class="folder-form form-data">
-    <input
-      type="text"
-      name="folder"
-      placeholder="New Folder"
-      autocomplete="off"
-    />
-    <button class="btn">Create</button>
-  </div>
-</form>
+<div class="form-container">
+  <form action="/drive/folders/<%= currentDirId %>" method="post">
+    <div class="folder-form form-data">
+      <input
+        type="text"
+        name="folder"
+        placeholder="New Folder"
+        autocomplete="off"
+      />
+      <button class="btn">Create</button>
+    </div>
+  </form>
+  <% if (locals.error) { %>
+  <div class="form-error"><%= error.msg %></div>
+  <% } %>
+</div>

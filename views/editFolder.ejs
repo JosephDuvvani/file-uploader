@@ -8,15 +8,20 @@
   </head>
   <body>
     <% if (locals.folder) { %>
-    <form
-      action="/drive/folders/edit/<%= folder.id %>"
-      method="post"
-      class="item-form"
-    >
-      <label for="rename">Rename Folder</label>
-      <input type="text" id="rename" name="name" value="<%= folder.name %>" />
-      <button class="btn">Save</button>
-    </form>
+    <div class="form-container">
+      <form
+        action="/drive/folders/edit/<%= folder.id %>"
+        method="post"
+        class="item-form"
+      >
+        <label for="rename">Rename Folder</label>
+        <input type="text" id="rename" name="name" value="<%= folder.name %>" />
+        <button class="btn">Save</button>
+      </form>
+      <% if (locals.error ) { %>
+      <div class="form-error"><%= error.msg %></div>
+      <% } %>
+    </div>
     <% } %>
   </body>
 </html>

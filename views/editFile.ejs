@@ -8,20 +8,25 @@
   </head>
   <body>
     <% if (locals.file) { %>
-    <form
-      action="/drive/files/edit/<%= file.id %>"
-      method="post"
-      class="item-form"
-    >
-      <label for="rename">Rename File</label>
-      <input
-        type="text"
-        id="rename"
-        name="filename"
-        value="<%= file.filename %>"
-      />
-      <button class="btn">Save</button>
-    </form>
+    <div class="form-container">
+      <form
+        action="/drive/files/edit/<%= file.id %>"
+        method="post"
+        class="item-form"
+      >
+        <label for="rename">Rename File</label>
+        <input
+          type="text"
+          id="rename"
+          name="filename"
+          value="<%= file.filename %>"
+        />
+        <button class="btn">Save</button>
+      </form>
+      <% if (locals.error ) { %>
+      <div class="form-error"><%= error.msg %></div>
+      <% } %>
+    </div>
     <% } %>
   </body>
 </html>
